@@ -1,17 +1,32 @@
-const BASE = '';
+import { supabase } from './supabaseClient';
 
 export async function saveAssessment(payload) {
-  const res = await fetch(`${BASE}/api/assessments`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  });
-  if (!res.ok) throw new Error(`Save failed (${res.status})`);
-  return res.json();
+  const { data, error } = await supabase
+    .from('assessments')
+    .insert({
+      pain_score: payload.pain_score,
+      function_score: payload.function_score,
+      stability_score: payload.stability_score,
+      overall_score: payload.overall_score,
+      grade: payload.grade,
+      survey_data: payload.survey_data,
+      typing_data: payload.typing_data,
+      mouse_data: payload.mouse_data,
+    })
+    .select('id')
+    .single();
+
+  if (error) throw new Error(error.message);
+  return data;
 }
 
 export async function fetchAssessments(limit = 5) {
-  const res = await fetch(`${BASE}/api/assessments?limit=${limit}`);
-  if (!res.ok) throw new Error(`Fetch failed (${res.status})`);
-  return res.json();
+  const { data, error } = await supabase
+    .from('assessments')
+    .select('id, timestamp, pain_score, function_score, stability_score, overall_score, grade')
+    .order('id', { ascending: false })
+    .limit(limit);
+
+  if (error) throw new Error(error.message);
+  return data ?? [];
 }
